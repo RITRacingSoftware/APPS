@@ -521,8 +521,8 @@ void loop()
   
 
   brakevalue = analogRead(brakepedal);
-  value5_0 = /*analogRead(pedal_5_0v);*/ 500;
-  value3_3 = /* analogRead(pedal_3_3v); */ 500;
+  value5_0 = analogRead(pedal_5_0v);
+  value3_3 = analogRead(pedal_3_3v);
 
   
   scaled5_0 = map(value5_0, 0, 1023, 0, 450);
