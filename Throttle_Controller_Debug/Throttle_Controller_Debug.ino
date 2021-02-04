@@ -36,13 +36,11 @@ int lookup = 0; //varaible for navigating through the tables
 
 int pedal_5_0v = A0;
 int pedal_3_3v = A2;
-int brakepedal = A7;
 
 int x = 0;
 
 int value5_0 = 0;
 int value3_3 = 0;
-int brakevalue = 0;
 
 int scaled5_0 = 0;
 int scaled3_3 = 0;
@@ -514,7 +512,6 @@ void setup()
 //-------------------- MAIN -------------------------
 void loop()
 {
-  brakevalue = analogRead(brakepedal);
   value5_0 = analogRead(pedal_5_0v);
   value3_3 = analogRead(pedal_3_3v);
 
