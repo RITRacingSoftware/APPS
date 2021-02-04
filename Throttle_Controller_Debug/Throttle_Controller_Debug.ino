@@ -36,11 +36,13 @@ int lookup = 0; //varaible for navigating through the tables
 
 int pedal_5_0v = A0;
 int pedal_3_3v = A2;
+int brakepedal = A7;
 
 int x = 0;
 
 int value5_0 = 0;
 int value3_3 = 0;
+int brakevalue = 0;
 
 int scaled5_0 = 0;
 int scaled3_3 = 0;
@@ -506,11 +508,13 @@ uint16_t torqueTestVal = 0;
 void setup()
 {
   Wire.begin();
+  Serial.begin(9600);
 }
 
 //-------------------- MAIN -------------------------
 void loop()
 {
+  brakevalue = analogRead(brakepedal);
   value5_0 = analogRead(pedal_5_0v);
   value3_3 = analogRead(pedal_3_3v);
 
@@ -525,21 +529,51 @@ void loop()
     value3_3 = 70;
   }
   scaled3_3 = map(value3_3, 70, 675, 0, 450);
+  
+  // debug
+  String sp = " ";
+  String debug5_0 = "5v: ";
+  String debug3_3 = "3.3v: ";
+  //String debug_brake = "Brake: ";
+  //Serial.println(debug_brake + brakevalue);
+
+  String debug_scaled5_0 = "Scaled 5v: ";
+  String debug_scaled3_3 = "Scaled 3.3v: ";
+  
+  Serial.print(debug5_0 + value5_0 + sp);
+  Serial.print(debug_scaled5_0 + scaled5_0 + sp);
+  Serial.print(debug3_3 + value3_3 + sp);
+  Serial.print(debug_scaled3_3 + scaled3_3 + sp);
  
   if ((abs(scaled3_3 - scaled5_0) < 45 )){
-    // use the average index
     lookup  = (scaled5_0 + scaled3_3) >> 1;
-  }
-  else {
-    // if the difference is too big, something went wrong
-    // set a low voltage so no torque is requested
-    lookup  = 0;
+
+    // debug
+    Serial.println("GOOD");
+    String debug_lookup = "lookup: ";
+    Serial.println(debug_lookup + lookup);
   }
 
-  // Write to DAC
+  if ((abs(scaled3_3 - scaled5_0) > 45 )){
+    lookup  = 0;
+
+    // debug
+    Serial.println("BAD");
+    Serial.println(value5_0);
+    Serial.println(value3_3);
+  }
+
   Wire.beginTransmission(MCP4725_ADDR);
+  //Serial.println("Writing to DAC");
   Wire.write(64);                     // cmd to update the DAC
   Wire.write(sintab2[lookup] >> 4);        // the 8 most significant bits...
   Wire.write((sintab2[lookup] & 15) << 4); // the 4 least significant bits...
-  Wire.endTransmission();
+  int error = Wire.endTransmission();
+  if (error == 0) {
+    //Serial.println("Succesful");
+  } // if
+  else {
+    Serial.print("Error: ");
+    Serial.println(error);
+  } // else
 } // loop()
