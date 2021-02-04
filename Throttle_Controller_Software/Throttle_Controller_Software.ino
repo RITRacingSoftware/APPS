@@ -520,7 +520,7 @@ void loop()
   }
   scaled5_0 = map(value5_0, 190, 1023, 0, 450);
   
-  // 3.3V @ no throttle: ~0.34V -> 70/1024 low limit
+  // 3.3V @ no throttle: ~0.34V -> 70/675 low limit (3.3V on DAC)
   if (value3_3 < 70) {
     value3_3 = 70;
   }
