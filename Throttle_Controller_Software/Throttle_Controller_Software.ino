@@ -36,14 +36,18 @@ int lookup = 0; //varaible for navigating through the tables
 
 int pedal_5_0v = A0;
 int pedal_3_3v = A2;
+int brakepedal = A7;
 
 int x = 0;
 
 int value5_0 = 0;
 int value3_3 = 0;
+int brakevalue = 0;
 
 int scaled5_0 = 0;
 int scaled3_3 = 0;
+
+bool latchBPPC;
 
 
 int sintab2[450] = 
@@ -51,55 +55,55 @@ int sintab2[450] =
 500,
 500,
 500,
-10,
-20,
-30,
-40,
-50,
-60,
-70,
-80,
-90,
-100,
-110,
-120,
-130,
-140,
-150,
-160,
-170,
-180,
-190,
-200,
-210,
-220,
-230,
-240,
-250,
-260,
-270,
-280,
-290,
-300,
-310,
-320,
-330,
-340,
-350,
-360,
-370,
-380,
-390,
-400,
-410,
-420,
-430,
-440,
-450,
-460,
-470,
-480,
-490,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
+500,
 500,
 510,
 520,
@@ -506,11 +510,14 @@ uint16_t torqueTestVal = 0;
 void setup()
 {
   Wire.begin();
+  
+  latchBPPC = false;
 }
 
 //-------------------- MAIN -------------------------
 void loop()
 {
+  brakevalue = analogRead(brakepedal);
   value5_0 = analogRead(pedal_5_0v);
   value3_3 = analogRead(pedal_3_3v);
 
@@ -533,7 +540,24 @@ void loop()
   else {
     // if the difference is too big, something went wrong
     // set a low voltage so no torque is requested
-    lookup  = 0;
+    lookup = 0;
+  }
+  
+  // don't request torque if the brakes are on 
+  // and the throttle is pressed more than 25% 
+  
+  // 125/1024 is the ADC value when the brakes are on 
+  // 112 is ~25% of 450 lookup range
+  if (brakevalue > 125 && lookup > 112) {
+    latchBPPC = true; 
+    lookup = 0;
+  } 
+  // keep latched until throttle is < 25%
+  else if (lookup > 112 && latchBPPC) {
+    lookup = 0; 
+  }
+  else {
+    latchBPPC = false; // clear latch
   }
 
   // Write to DAC
