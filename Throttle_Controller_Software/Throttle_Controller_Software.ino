@@ -49,6 +49,19 @@ int scaled3_3 = 0;
 
 bool latchBPPC;
 
+#define ADC_MAX 1023
+#define 3V_ADC_MAX 675
+
+#define 5V_NO_THROTTLE 190
+#define 3V_NO_THROTTLE 70
+
+#define 5V_OPEN_CIRCUIT 1000 //~4.9V
+#define 3V_OPEN_CIRCUIT 655 //~3.2V
+
+#define PLAUSIBILITY_THRESHOLD 45
+#define BREAKE_THRESHOLD 125
+#define THROTTLE_LATCH_SET 112
+#define THROTTLE_LATCH_RESET 20
 
 int sintab2[450] = 
 {
@@ -522,18 +535,18 @@ void loop()
   value3_3 = analogRead(pedal_3_3v);
 
   // 5V @ no throttle: ~0.92V -> 190/1024 low limit (10 bit ADC)
-  if (value5_0 < 190) {
-    value5_0 = 190;
+  if (value5_0 < 5V_NO_THROTTLE || value5_0 >= 5V_OPEN_CIRCUIT) {
+    value5_0 = 5V_NO_THROTTLE;
   }
-  scaled5_0 = map(value5_0, 190, 1023, 0, 450);
+  scaled5_0 = map(value5_0, 5V_NO_THROTTLE, ADC_MAX, 0, 450);
   
   // 3.3V @ no throttle: ~0.34V -> 70/675 low limit (3.3V on DAC)
-  if (value3_3 < 70) {
-    value3_3 = 70;
+  if (value3_3 < 3V_NO_THROTTLE || value3_0 >= 3V_OPEN_CIRCUIT) {
+    value3_3 = 3V_NO_THROTTLE;
   }
-  scaled3_3 = map(value3_3, 70, 675, 0, 450);
+  scaled3_3 = map(value3_3, 3V_NO_THROTTLE, 675, 0, 450);
  
-  if ((abs(scaled3_3 - scaled5_0) < 45 )){
+  if ((abs(scaled3_3 - scaled5_0) < PLAUSIBILITY_THRESHOLD )){
     // use the average index
     lookup  = (scaled5_0 + scaled3_3) >> 1;
   }
@@ -548,12 +561,12 @@ void loop()
   
   // 125/1024 is the ADC value when the brakes are on 
   // 112 is ~25% of 450 lookup range
-  if (brakevalue > 125 && lookup > 112) {
+  if (brakevalue > BREAKE_THRESHOLD && lookup > THROTTLE_LATCH_SET) {
     latchBPPC = true; 
     lookup = 0;
   } 
   // keep latched until throttle is < 5%
-  else if (lookup > 20 && latchBPPC) {
+  else if (lookup > THROTTLE_LATCH_RESET && latchBPPC) {
     lookup = 0; 
   }
   else {
