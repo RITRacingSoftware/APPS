@@ -552,8 +552,8 @@ void loop()
     latchBPPC = true; 
     lookup = 0;
   } 
-  // keep latched until throttle is < 25%
-  else if (lookup > 112 && latchBPPC) {
+  // keep latched until throttle is < 5%
+  else if (lookup > 20 && latchBPPC) {
     lookup = 0; 
   }
   else {
