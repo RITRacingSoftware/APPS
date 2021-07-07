@@ -554,20 +554,40 @@ void loop()
   
   // don't request torque if the brakes are on 
   // and the throttle is pressed more than 25% 
-  
-  // 125/1024 is the ADC value when the brakes are on 
-  // 112 is ~25% of 450 lookup range
-  if (brakevalue > BRAKE_THRESHOLD && lookup > THROTTLE_LATCH_SET) {
-    latchBPPC = true; 
+
+    if (!latchBPPC)
+  {
+    if ((brakevalue > BRAKE_THRESHOLD) && (lookup > THROTTLE_LATCH_SET))
+    {
+      latchBPPC == true;
+    }
+  }
+  else
+  {
+    if ((brakevalue < BRAKE_THRESHOLD) && (lookup < THROTTLE_LATCH_RESET))
+    {
+      latchBPPC == false;
+    }
+  }
+
+  if (latchBPPC)
+  {
     lookup = 0;
-  } 
-  // keep latched until throttle is < 5%
-  else if (lookup > THROTTLE_LATCH_RESET && latchBPPC) {
-    lookup = 0; 
   }
-  else {
-    latchBPPC = false; // clear latch
-  }
+  
+//  // 125/1024 is the ADC value when the brakes are on 
+//  // 112 is ~25% of 450 lookup range
+//  if (brakevalue > BRAKE_THRESHOLD && lookup > THROTTLE_LATCH_SET) {
+//    latchBPPC = true; 
+//    lookup = 0;
+//  } 
+//  // keep latched until throttle is < 5%
+//  else if (lookup > THROTTLE_LATCH_RESET && latchBPPC) {
+//    lookup = 0; 
+//  }
+//  else {
+//    latchBPPC = false; // clear latch
+//  }
 
   // Write to DAC
   Wire.beginTransmission(MCP4725_ADDR);
