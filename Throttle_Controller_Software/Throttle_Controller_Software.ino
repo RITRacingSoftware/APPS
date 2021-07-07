@@ -554,11 +554,12 @@ void loop()
   
   // don't request torque if the brakes are on 
   // and the throttle is pressed more than 25% 
-
-    if (!latchBPPC)
+  Serial.println(lookup);
+  if (!latchBPPC)
   {
     if ((brakevalue > BRAKE_THRESHOLD) && (lookup > THROTTLE_LATCH_SET))
     {
+      Serial.prinln("LATCHED");
       latchBPPC == true;
     }
   }
@@ -566,6 +567,10 @@ void loop()
   {
     if ((brakevalue < BRAKE_THRESHOLD) && (lookup < THROTTLE_LATCH_RESET))
     {
+      Serial.print("UNLATCHED. BP/TH");
+      Serial.print(brakevalue);
+      Serial.print("/");
+      Serial.print(lookup);
       latchBPPC == false;
     }
   }
