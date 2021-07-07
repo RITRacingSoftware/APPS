@@ -554,17 +554,13 @@ void loop()
   
   // don't request torque if the brakes are on 
   // and the throttle is pressed more than 25% 
-  Serial.println(lookup);
-  if (!latchBPPC)
-  {
+
     if ((brakevalue > BRAKE_THRESHOLD) && (lookup > THROTTLE_LATCH_SET))
     {
-      Serial.prinln("LATCHED");
+      Serial.println("LATCHED");
       latchBPPC == true;
     }
-  }
-  else
-  {
+
     if ((brakevalue < BRAKE_THRESHOLD) && (lookup < THROTTLE_LATCH_RESET))
     {
       Serial.print("UNLATCHED. BP/TH");
@@ -573,13 +569,13 @@ void loop()
       Serial.print(lookup);
       latchBPPC == false;
     }
-  }
 
   if (latchBPPC)
   {
     lookup = 0;
   }
-  
+
+  Serial.println(lookup);
 //  // 125/1024 is the ADC value when the brakes are on 
 //  // 112 is ~25% of 450 lookup range
 //  if (brakevalue > BRAKE_THRESHOLD && lookup > THROTTLE_LATCH_SET) {
