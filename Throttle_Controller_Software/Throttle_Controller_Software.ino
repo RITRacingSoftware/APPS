@@ -53,13 +53,13 @@ bool latchBPPC;
 #define NO_THROTTLE_5V 190
 #define NO_THROTTLE_3V 70
 
-#define OPEN_CIRCUIT_5V 1000 //~4.9V
-#define OPEN_CIRCUIT_3V 655 //~3.2V
+#define OPEN_CIRCUIT_5V 1015 //~4.9V
+#define OPEN_CIRCUIT_3V 665 //~3.2V
 
 #define PLAUSIBILITY_THRESHOLD 45
 #define BRAKE_THRESHOLD 125
 #define THROTTLE_LATCH_SET 112
-#define THROTTLE_LATCH_RESET 100
+#define THROTTLE_LATCH_RESET 20
 
 int sintab2[450] = 
 {
@@ -519,7 +519,7 @@ int sintab2[450] =
 void setup()
 {
   Wire.begin();
-  
+  Serial.begin(115200);
   latchBPPC = false;
 }
 
@@ -557,7 +557,7 @@ void loop()
 
     if ((brakevalue > BRAKE_THRESHOLD) && (lookup > THROTTLE_LATCH_SET))
     {
-      Serial.println("LATCHED");
+
       latchBPPC == true;
     }
 
@@ -572,6 +572,7 @@ void loop()
 
   if (latchBPPC)
   {
+    Serial.println("LATCHED");
     lookup = 0;
   }
 
