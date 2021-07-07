@@ -53,13 +53,13 @@ bool latchBPPC;
 #define NO_THROTTLE_5V 190
 #define NO_THROTTLE_3V 70
 
-#define OPEN_CIRCUIT_5V 1015 //~4.9V
-#define OPEN_CIRCUIT_3V 665 //~3.2V
+#define OPEN_CIRCUIT_5V 1000 //~4.9V
+#define OPEN_CIRCUIT_3V 655 //~3.2V
 
 #define PLAUSIBILITY_THRESHOLD 45
 #define BRAKE_THRESHOLD 125
 #define THROTTLE_LATCH_SET 112
-#define THROTTLE_LATCH_RESET 20
+#define THROTTLE_LATCH_RESET 100
 
 int sintab2[450] = 
 {
@@ -519,7 +519,7 @@ int sintab2[450] =
 void setup()
 {
   Wire.begin();
-  Serial.begin(115200);
+  
   latchBPPC = false;
 }
 
@@ -530,14 +530,23 @@ void loop()
   value5_0 = analogRead(pedal_5_0v);
   value3_3 = analogRead(pedal_3_3v);
 
+  if (value5_0 >= OPEN_CIRCUIT_5V || value3_3 >= OPEN_CIRCUIT_3V)
+  {
+    Serial.println("Open Circuit detected!"); 
+    lookup = 0; 
+  }
+  else
+  {
+  // clip to lowest values
   // 5V @ no throttle: ~0.92V -> 190/1024 low limit (10 bit ADC)
-  if (value5_0 < NO_THROTTLE_5V || value5_0 >= OPEN_CIRCUIT_5V) {
+  if (value5_0 < NO_THROTTLE_5V) {
     value5_0 = NO_THROTTLE_5V;
   }
+  
   scaled5_0 = map(value5_0, NO_THROTTLE_5V, ADC_MAX, 0, 450);
   
   // 3.3V @ no throttle: ~0.34V -> 70/675 low limit (3.3V on DAC)
-  if (value3_3 < NO_THROTTLE_3V || value3_3 >= OPEN_CIRCUIT_3V) {
+  if (value3_3 < NO_THROTTLE_3V) {
     value3_3 = NO_THROTTLE_3V;
   }
   scaled3_3 = map(value3_3, NO_THROTTLE_3V, ADC_MAX_3V, 0, 450);
@@ -557,22 +566,24 @@ void loop()
 
     if ((brakevalue > BRAKE_THRESHOLD) && (lookup > THROTTLE_LATCH_SET))
     {
-
+      Serial.println("LATCHED BP,TH");
+      Serial.print(brakevalue);
+      Serial.print(",");
+      Serial.print(lookup);
       latchBPPC == true;
     }
 
     if ((brakevalue < BRAKE_THRESHOLD) && (lookup < THROTTLE_LATCH_RESET))
     {
-      Serial.print("UNLATCHED. BP/TH");
+      Serial.print("UNLATCHED. BP,TH");
       Serial.print(brakevalue);
-      Serial.print("/");
+      Serial.print(",");
       Serial.print(lookup);
       latchBPPC == false;
     }
 
   if (latchBPPC)
   {
-    Serial.println("LATCHED");
     lookup = 0;
   }
 
@@ -590,6 +601,7 @@ void loop()
 //  else {
 //    latchBPPC = false; // clear latch
 //  }
+  }
 
   // Write to DAC
   Wire.beginTransmission(MCP4725_ADDR);
