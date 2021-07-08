@@ -543,15 +543,22 @@ void loop()
       value5_0 = NO_THROTTLE_5V;
     }
 
-    scaled5_0 = map(value5_0, NO_THROTTLE_5V, ADC_MAX, 0, 450);
+    // scaled5_0 = map(value5_0, NO_THROTTLE_5V, ADC_MAX, 0, 450);
+    scaled5_0 = ((float) (value5_0 - NO_THROTTLE_5V) / (float) (ADC_MAX - NO_THROTTLE_5V)) * 450.0;
 
     // 3.3V @ no throttle: ~0.34V -> 70/675 low limit (3.3V on DAC)
     if (value3_3 < NO_THROTTLE_3V) {
       value3_3 = NO_THROTTLE_3V;
     }
-    scaled3_3 = map(value3_3, NO_THROTTLE_3V, ADC_MAX_3V, 0, 450);
+    // scaled3_3 = map(value3_3, NO_THROTTLE_3V, ADC_MAX_3V, 0, 450);
+    scaled3_3 = ((float) (value3_3 - NO_THROTTLE_3V) / (float) (ADC_MAX_3V - NO_THROTTLE_3V)) * 450.0;
+    // printf("SCALED 5: %d, SCALED 3: %d\r\n", scaled5_0, scaled3_3);
 
-    if ((abs(scaled3_3 - scaled5_0) < PLAUSIBILITY_THRESHOLD )){
+    int diff = scaled3_3 - scaled5_0;
+
+    int abs_v = diff >= 0 ? diff : diff * -1;
+
+    if ((abs_v < PLAUSIBILITY_THRESHOLD )){
       // use the average index
       lookup  = (scaled5_0 + scaled3_3) >> 1;
     }
@@ -567,29 +574,30 @@ void loop()
     if ((brakevalue > BRAKE_THRESHOLD) && (lookup > THROTTLE_LATCH_SET))
     {
 
-      Serial.println("LATCHED BP,TH");
+      Serial.print("LATCHED. BP,TH ");
       Serial.print(brakevalue);
-      Serial.print(",");
-      Serial.print(lookup);
+      Serial.print(", ");
+      Serial.println(lookup);
 
       //Serial.println('.');
-      latchBPPC == true;
+      latchBPPC = true;
     }
 
     if ((brakevalue < BRAKE_THRESHOLD) && (lookup < THROTTLE_LATCH_RESET))
     {
 
-      Serial.print("UNLATCHED. BP,TH");
+      Serial.print("UNLATCHED. BP,TH ");
       Serial.print(brakevalue);
-      Serial.print(",");
-      Serial.print(lookup);
+      Serial.print(", ");
+      Serial.println(lookup);
 
-      //Serial.println('.');
-      latchBPPC == false;
+    //   Serial.println('.');
+      latchBPPC = false;
     }
 
     if (latchBPPC)
     {
+        // printf("WHAT THE DOG DOIN\r\n");
       lookup = 0;
     }
 
@@ -607,8 +615,8 @@ void loop()
     //    latchBPPC = false; // clear latch
     //  }
   }
-  Serial.println(lookup);
-
+    Serial.println(lookup);
+    
   // Write to DAC
   Wire.beginTransmission(MCP4725_ADDR);
   Wire.write(64);                     // cmd to update the DAC
@@ -616,4 +624,3 @@ void loop()
   Wire.write((sintab2[lookup] & 15) << 4); // the 4 least significant bits...
   Wire.endTransmission();
 } // loop()
-
